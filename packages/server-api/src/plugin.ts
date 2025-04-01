@@ -1,4 +1,4 @@
-import { IRouter } from 'express';
+import { IRouter } from 'express'
 
 /**
  * Plugins are components that extend functionality of the server and can be installed via the Signal K AppStore.
@@ -33,13 +33,13 @@ export interface Plugin {
    *
    * @category Identification
    */
-  id: string;
+  id: string
 
   /**
    * Human oriented name for the plugin. This is used in the server's plugin configuration UI.
    * @category Identification
    */
-  name: string;
+  name: string
 
   /**
    * This function is called to start the plugin.
@@ -54,7 +54,7 @@ export interface Plugin {
    * @param config - the configuration data entered via the Plugin Config screen
    * @param restart - a function that can be called by the plugin to restart itself
    */
-  start(config: object, restart: (newConfiguration: object) => void): void;
+  start(config: object, restart: (newConfiguration: object) => void): void
 
   /**
    * This function is called when the plugin is disabled or after configuration changes. Use this function to "clean up"
@@ -64,22 +64,22 @@ export interface Plugin {
    *
    * @category Lifecycle
    */
-  stop(): void | Promise<void>;
+  stop(): void | Promise<void>
 
   /**
    * @category Configuration
    */
-  enabledByDefault?: boolean;
+  enabledByDefault?: boolean
 
   /**
    * @category Configuration
    */
-  schema: () => object | object;
+  schema: () => object | object
 
   /**
    * @category Configuration
    */
-  uiSchema?: () => object | object;
+  uiSchema?: () => object | object
 
   /**
    * Plugins can implement this method to provide an API. Like {@link start} and {@link stop}, this function will be
@@ -102,10 +102,10 @@ export interface Plugin {
    * @param router
    * @returns
    */
-  registerWithRouter?: (router: IRouter) => void;
+  registerWithRouter?: (router: IRouter) => void
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getOpenApi?: () => any;
+  getOpenApi?: () => any
 
-  signalKApiRoutes?: (router: IRouter) => IRouter;
+  signalKApiRoutes?: (router: IRouter) => IRouter
 }

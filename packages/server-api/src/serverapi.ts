@@ -1,5 +1,11 @@
-import { SKVersion, AutopilotProviderRegistry, Features, PropertyValuesEmitter, ResourceProviderRegistry } from '.';
-import { CourseApi } from './course';
+import {
+  SKVersion,
+  AutopilotProviderRegistry,
+  Features,
+  PropertyValuesEmitter,
+  ResourceProviderRegistry
+} from '.'
+import { CourseApi } from './course'
 
 /**
  * SignalK server provides an interface to allow plugins to:
@@ -13,7 +19,12 @@ import { CourseApi } from './course';
  * These functions are available via the app object passed to the plugin when it is invoked.
  */
 
-export interface ServerAPI extends PropertyValuesEmitter, ResourceProviderRegistry, AutopilotProviderRegistry, Features, CourseApi {
+export interface ServerAPI
+  extends PropertyValuesEmitter,
+    ResourceProviderRegistry,
+    AutopilotProviderRegistry,
+    Features,
+    CourseApi {
   /**
    * Returns the entry for the provided path starting from `vessels.self` in the full data model.
    *
@@ -29,7 +40,7 @@ export interface ServerAPI extends PropertyValuesEmitter, ResourceProviderRegist
    * @category Data Model
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getSelfPath(path: string): any;
+  getSelfPath(path: string): any
 
   /**
    * Returns the entry for the provided path starting from the `root` of the full data model.
@@ -56,18 +67,18 @@ export interface ServerAPI extends PropertyValuesEmitter, ResourceProviderRegist
    * @category Data Model
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getPath(path: string): any; // TODO: return SignalK data model type
+  getPath(path: string): any // TODO: return SignalK data model type
 
   /**
    * @category Data Model
    */
-  getMetadata(path: string): Metadata | undefined;
+  getMetadata(path: string): Metadata | undefined
 
   /**
    * @category Data Model
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  putSelfPath(aPath: string, value: any, updateCb: () => void): Promise<any>;
+  putSelfPath(aPath: string, value: any, updateCb: () => void): Promise<any>
 
   /**
    * @category Data Model
@@ -78,16 +89,16 @@ export interface ServerAPI extends PropertyValuesEmitter, ResourceProviderRegist
     updateCb: (err?: Error) => void,
     source: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<any>;
+  ): Promise<any>
 
   //TSTODO convert queryRequest to ts
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  queryRequest(requestId: string): Promise<any>;
+  queryRequest(requestId: string): Promise<any>
 
   /**
    * @category Status and Debugging
    */
-  error(msg: string): void;
+  error(msg: string): void
 
   /**
    * Log debug messages.
@@ -102,7 +113,7 @@ export interface ServerAPI extends PropertyValuesEmitter, ResourceProviderRegist
    *
    * @category Status and Debugging
    */
-  debug(msg: string): void;
+  debug(msg: string): void
 
   /**
    * Register a function to intercept all delta messages _before_ they are processed by the server.
@@ -132,7 +143,7 @@ export interface ServerAPI extends PropertyValuesEmitter, ResourceProviderRegist
    *
    * @category Data Model
    */
-  registerDeltaInputHandler(handler: DeltaInputHandler): void;
+  registerDeltaInputHandler(handler: DeltaInputHandler): void
 
   /**
    * Set the current status of the plugin that is displayed in the plugin configuration UI and the Dashboard.
@@ -150,7 +161,7 @@ export interface ServerAPI extends PropertyValuesEmitter, ResourceProviderRegist
    *
    * @category Status and Debugging
    */
-  setPluginStatus(msg: string): void;
+  setPluginStatus(msg: string): void
 
   /**
    * Set the current error status of the plugin that is displayed in the plugin configuration UI and the Dashboard.
@@ -166,7 +177,7 @@ export interface ServerAPI extends PropertyValuesEmitter, ResourceProviderRegist
    *
    * @category Status and Debugging
    */
-  setPluginError(msg: string): void;
+  setPluginError(msg: string): void
 
   /**
    * Emit a delta message.
@@ -196,7 +207,7 @@ export interface ServerAPI extends PropertyValuesEmitter, ResourceProviderRegist
    * @param skVersion Optional parameter to specify the Signal K version of the delta.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleMessage(id: string, msg: any, skVersion?: SKVersion): void;
+  handleMessage(id: string, msg: any, skVersion?: SKVersion): void
 
   /**
    * Save changes to the plugin's configuration options.
@@ -215,7 +226,7 @@ export interface ServerAPI extends PropertyValuesEmitter, ResourceProviderRegist
   savePluginOptions(
     configuration: object,
     cb: (err: NodeJS.ErrnoException | null) => void
-  ): void;
+  ): void
 
   /**
    * Read the stored plugin configuration options.
@@ -227,7 +238,7 @@ export interface ServerAPI extends PropertyValuesEmitter, ResourceProviderRegist
    *
    * @category Configuration
    */
-  readPluginOptions(): object;
+  readPluginOptions(): object
 
   /**
    * Returns the full path of the directory where the plugin can persist its internal data, e.g. data files, etc.
@@ -237,7 +248,7 @@ export interface ServerAPI extends PropertyValuesEmitter, ResourceProviderRegist
    * let myDataFile = require('path').join( app.getDataDirPath(), 'somedatafile.ext')
    * ```
    */
-  getDataDirPath(): string;
+  getDataDirPath(): string
 
   /**
    * Register a handler to action [`PUT`](http://signalk.org/specification/1.3.0/doc/put.html) requests for a specific path.
@@ -332,37 +343,37 @@ export interface ServerAPI extends PropertyValuesEmitter, ResourceProviderRegist
     path: string,
     callback: () => void,
     source: string
-  ): void;
+  ): void
 
   registerActionHandler(
     context: string,
     path: string,
     callback: () => void,
     source: string
-  ): void;
+  ): void
 
   registerHistoryProvider(provider: {
-    hasAnydata: (options: object, cb: (hasResults: boolean) => void) => void;
+    hasAnydata: (options: object, cb: (hasResults: boolean) => void) => void
     getHistory: (
       date: Date,
       path: string,
       cb: (deltas: object[]) => void
-    ) => void;
+    ) => void
     streamHistory: (
       // TSTODO propert type
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       spark: any,
       options: object,
       onDelta: (delta: object) => void
-    ) => void;
-  }): void;
+    ) => void
+  }): void
 
   /**
    * Returns Ports object which contains information about the serial ports available on the machine.
    *
    * @category Serial Ports
    */
-  getSerialPorts(): Promise<Ports>;
+  getSerialPorts(): Promise<Ports>
 
   /**
    * Report to the server that the plugin has sent data to other hosts, which will update the output message rate and
@@ -384,13 +395,13 @@ export interface ServerAPI extends PropertyValuesEmitter, ResourceProviderRegist
    *
    * @category Status and Debugging
    */
-  reportOutputMessages(count?: number): void;
+  reportOutputMessages(count?: number): void
 }
 
 /**
  * @deprecated Use {@link ServerAPI} instead.
  */
-export type PluginServerApp = ServerAPI;
+export type PluginServerApp = ServerAPI
 
 export type DeltaInputHandler = (
   delta: object,
