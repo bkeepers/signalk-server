@@ -12,10 +12,10 @@ export type NormalizedDelta<isMeta extends boolean = boolean> = {
   timestamp: Timestamp
   isMeta: isMeta
   value: isMeta extends true
-    ? MetaValue
-    : isMeta extends false
-    ? Value
-    : MetaValue | Value
+  ? MetaValue
+  : isMeta extends false
+  ? Value
+  : MetaValue | Value
 }
 
 export type SourceRef = Brand<string, 'sourceRef'>
@@ -101,6 +101,7 @@ export interface MetaValue {
     upper: number
   }
   zones?: Zone[]
+  supportsPut?: boolean
 }
 
 // Notification attribute types
