@@ -8,6 +8,7 @@ import {
 } from '.'
 import { CourseApi } from './course'
 import { StreamBundle } from './streambundle'
+import { SubscriptionManager } from './subscriptionmanager'
 
 /**
  * SignalK server provides an interface to allow {@link Plugin | Plugins } to:
@@ -25,10 +26,10 @@ import { StreamBundle } from './streambundle'
  */
 export interface ServerAPI
   extends PropertyValuesEmitter,
-    ResourceProviderRegistry,
-    AutopilotProviderRegistry,
-    Features,
-    CourseApi {
+  ResourceProviderRegistry,
+  AutopilotProviderRegistry,
+  Features,
+  CourseApi {
   /**
    * Returns the entry for the provided path starting from `vessels.self` in the full data model.
    *
@@ -99,6 +100,12 @@ export interface ServerAPI
    * @category Data Model
    */
   streambundle: StreamBundle
+
+  /**
+   * @see [Processing data from the server](../../../docs/develop/plugins/deltas.md#subscribing-to-deltas)
+   * @category Data Model
+   */
+  subscriptionmanager: SubscriptionManager
 
   //TSTODO convert queryRequest to ts
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

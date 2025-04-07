@@ -16,10 +16,15 @@
  */
 
 import {
+  SubscriptionManager as ISubscriptionManager,
+  Unsubscribes,
   NormalizedDelta,
   Path,
   Position,
-  WithContext
+  WithContext,
+  SubscribeMessage,
+  SubscriptionOptions,
+  UnsubscribeMessage
 } from '@signalk/server-api'
 import Bacon from 'baconjs'
 import { isPointWithinRadius } from 'geolib'
@@ -27,7 +32,7 @@ import _, { forOwn, get, isString } from 'lodash'
 import { createDebug } from './debug'
 import DeltaCache from './deltacache'
 import { StreamBundle, toDelta } from './streambundle'
-import { ContextMatcher, Unsubscribes } from './types'
+import { ContextMatcher } from './types'
 const debug = createDebug('signalk-server:subscriptionmanager')
 
 interface BusesMap {
@@ -39,7 +44,7 @@ interface RelativePositionOrigin {
   position: Position
 }
 
-class SubscriptionManager {
+class SubscriptionManager implements ISubscriptionManager {
   streambundle: StreamBundle
   selfContext: string
   app: any
@@ -50,7 +55,7 @@ class SubscriptionManager {
   }
 
   subscribe = (
-    command: any,
+    command: SubscribeMessage,
     unsubscribes: Unsubscribes,
     errorCallback: (err: any) => void,
     callback: (msg: any) => void,
@@ -94,7 +99,7 @@ class SubscriptionManager {
     }
   }
 
-  unsubscribe(msg: any, unsubscribes: Unsubscribes) {
+  unsubscribe(msg: UnsubscribeMessage, unsubscribes: Unsubscribes) {
     if (
       msg.unsubscribe &&
       msg.context === '*' &&
@@ -118,7 +123,7 @@ class SubscriptionManager {
 
 function handleSubscribeRows(
   app: any,
-  rows: any[],
+  rows: SubscriptionOptions[],
   unsubscribes: Unsubscribes,
   buses: BusesMap,
   filter: ContextMatcher,
@@ -149,7 +154,7 @@ interface App {
 
 function handleSubscribeRow(
   app: App,
-  subscribeRow: any,
+  subscribeRow: SubscriptionOptions,
   unsubscribes: Unsubscribes,
   buses: BusesMap,
   filter: ContextMatcher,
@@ -221,7 +226,7 @@ function handleSubscribeRow(
   })
 }
 
-function pathMatcher(path: string) {
+function pathMatcher(path: string = '*') {
   const pattern = path.replace('.', '\\.').replace('*', '.*')
   const matcher = new RegExp('^' + pattern + '$')
   return (aPath: string) => matcher.test(aPath)

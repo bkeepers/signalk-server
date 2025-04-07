@@ -11,6 +11,7 @@ export * from './autopilotapi.guard'
 export * from './propertyvalues'
 export * from './brand'
 export * from './streambundle'
+export * from './subscriptionmanager'
 
 export interface Position {
   latitude: number
