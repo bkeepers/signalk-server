@@ -76,3 +76,4 @@ fly_io
 
 /docs/*
 !/docs/dist
+.tsbuildinfo
