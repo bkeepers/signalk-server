@@ -15,7 +15,7 @@ export interface Logging {
   removeDebug: (name: string) => void
 }
 
-type LogMessage = {
+export type LogMessage = {
   ts: string
   row: string
   isError?: boolean

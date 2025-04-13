@@ -6,8 +6,15 @@ import { Config } from './config/config'
 import DeltaCache from './deltacache'
 import { WithSecurityStrategy } from './security'
 import { IRouter } from 'express'
+import { ServerAppEvents } from './events'
+import { Logging } from './logging'
 
-export interface ServerApp extends ServerAPI, WithSecurityStrategy, IRouter, WithConfig {
+export interface ServerApp
+  extends ServerAPI,
+    WithSecurityStrategy,
+    IRouter,
+    WithConfig,
+    SignalKMessageHub {
   started: boolean
   interfaces: { [key: string]: any }
   intervals: NodeJS.Timeout[]
@@ -18,9 +25,10 @@ export interface ServerApp extends ServerAPI, WithSecurityStrategy, IRouter, Wit
   getProviderStatus: () => any
   lastServerEvents: { [key: string]: any }
   clients: number
+  logging: Logging
 }
 
-export interface SignalKMessageHub extends EventEmitter {
+export interface SignalKMessageHub extends EventEmitter<ServerAppEvents> {
   signalk: FullSignalK
   handleMessage: (
     id: string,

@@ -3,21 +3,52 @@ import { EventEmitter } from 'node:events'
 import { createDebug } from './debug'
 import { Debugger } from 'debug'
 import { Brand } from '@signalk/server-api'
+import { PipedProviderConfig } from './pipedproviders'
+import { ServerApp } from './app'
+import { LogMessage } from './logging'
+
+export interface ServerAppEvents {
+  nmea0183: [string]
+  nmea0183out: [string]
+  tcpserver0183data: [string]
+  pipedProvidersStarted: [PipedProviderConfig]
+  serverevent: [
+    {
+      type:
+        | 'RESTORESTATUS'
+        | 'VESSEL_INFO'
+        | 'SERVERSTATISTICS'
+        | 'PROVIDERSTATUS'
+      from?: 'signalk-server' | 'disccovery'
+      data: unknown
+    }
+  ]
+  serverlog: [
+    {
+      type: 'LOG'
+      data: LogMessage
+    }
+  ]
+}
 
 export function startEvents(
-  app: any,
+  app: ServerApp,
   spark: any,
   onEvent: (data: any) => void,
   eventsFromQuery = ''
 ) {
-  const events = eventsFromQuery.split(',')
+  const events = eventsFromQuery.split(',') as Array<keyof ServerAppEvents>
   events.forEach((event) => {
     app.on(event, (data: any) => onEvent({ event, data }))
     spark.onDisconnects.push(() => app.removeListener(event, onEvent))
   })
 }
 
-export function startServerEvents(app: any, spark: any, onServerEvent: any) {
+export function startServerEvents(
+  app: ServerApp,
+  spark: any,
+  onServerEvent: any
+) {
   app.on('serverevent', onServerEvent)
   spark.onDisconnects.push(() => {
     app.removeListener('serverevent', onServerEvent)
@@ -75,16 +106,7 @@ function safeApply<T, A extends any[]>(
   }
 }
 
-function arrayClone<T>(arr: T[]): T[] {
-  const n = arr.length
-  const copy = new Array(n)
-  for (let i = 0; i < n; i += 1) {
-    copy[i] = arr[i]
-  }
-  return copy
-}
-
-export type EventName = Brand<string, 'eventname'>
+export type EventName = keyof ServerAppEvents
 export type EmitterId = Brand<string, 'emitterId'>
 export type ListenerId = Brand<string, 'listenerid'>
 export type EventsActorId = EmitterId & ListenerId
@@ -99,14 +121,14 @@ export interface WrappedEmitter {
     }[]
   }
 
-  emit: (this: any, eventName: string, ...args: any[]) => boolean
+  emit: (this: any, eventName: EventName, ...args: any[]) => boolean
   addListener: (
     eventName: EventName,
     listener: (...args: any[]) => void
-  ) => EventEmitter
+  ) => EventEmitter<ServerAppEvents>
 
   bindMethodsById: (eventsId: EventsActorId) => {
-    emit: (this: any, eventName: string, ...args: any[]) => boolean
+    emit: (this: any, eventName: EventName, ...args: any[]) => boolean
     addListener: (
       eventName: EventName,
       listener: (...args: any[]) => void
@@ -119,20 +141,22 @@ export interface WithWrappedEmitter {
   wrappedEmitter: WrappedEmitter
 }
 
-export function wrapEmitter(targetEmitter: EventEmitter): WrappedEmitter {
+type EmitterData = {
+  emitters: {
+    [emitterId: EmitterId]: number
+  }
+  listeners: {
+    [listenerId: ListenerId]: boolean
+  }
+}
+
+export function wrapEmitter(
+  targetEmitter: EventEmitter<ServerAppEvents>
+): WrappedEmitter {
   const targetAddListener = targetEmitter.addListener.bind(targetEmitter)
 
   const eventDebugs: { [key: string]: Debugger } = {}
-  const eventsData: {
-    [eventName: EventName]: {
-      emitters: {
-        [emitterId: EmitterId]: number
-      }
-      listeners: {
-        [listenerId: ListenerId]: boolean
-      }
-    }
-  } = {}
+  const eventsData: Partial<Record<EventName, EmitterData>> = {}
 
   let emittedCount = 0
 
@@ -189,7 +213,7 @@ export function wrapEmitter(targetEmitter: EventEmitter): WrappedEmitter {
       safeApply(handler, this, args)
     } else {
       const len = handler.length
-      const listeners = arrayClone(handler)
+      const listeners = [...handler]
       for (let i = 0; i < len; i += 1) {
         safeApply(listeners[i], this, args)
       }

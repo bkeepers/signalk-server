@@ -51,7 +51,8 @@ interface PipeElementConfig {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   optionMappings: any
 }
-interface PipedProviderConfig {
+
+export interface PipedProviderConfig {
   enabled: boolean
   id: string
   pipeElements: PipeElementConfig[]
@@ -140,11 +141,11 @@ export function pipedProviders(
         }
       })
     }
-    const efectiveElementType = elementConfig.type.startsWith('providers/')
+    const effectiveElementType = elementConfig.type.startsWith('providers/')
       ? elementConfig.type.replace('providers/', '@signalk/streams/')
       : elementConfig.type
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return new (require(efectiveElementType))({
+    return new (require(effectiveElementType))({
       ...elementConfig.options,
       createDebug
     })
