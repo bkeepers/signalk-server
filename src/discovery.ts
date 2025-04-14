@@ -14,14 +14,28 @@
  * limitations under the License.
  */
 
-import { createDebug } from './debug'
+import { createDebug } from './debug.js'
 const debug = createDebug('signalk-server:discovery')
-const canboatjs = require('@canboat/canboatjs')
-const dgram = require('dgram')
-const mdns = require('mdns-js')
-const { networkInterfaces } = require('os')
+import canboatjs from '@canboat/canboatjs'
+import { createSocket } from 'dgram'
+import { Browser, Service, tcp } from 'dnssd2'
+import { networkInterfaces } from 'os'
+import { ServerApp } from './app.js'
+import { PipedProviderConfig } from './pipedproviders.js'
 
-module.exports.runDiscovery = function (app) {
+type WsType = 'ws' | 'wss'
+
+type GoFreeMessage = {
+  SerialNumber: string
+  Name: string
+  IP: string
+  Services: {
+    Service: string
+    Port: string
+  }[]
+}
+
+export function runDiscovery(app: ServerApp) {
   if (canboatjs.discover) {
     try {
       canboatjs.discover(app)
@@ -35,7 +49,7 @@ module.exports.runDiscovery = function (app) {
   discoverSignalkWs('ws')
   discoverSignalkWs('wss')
 
-  function findUDPProvider(port) {
+  function findUDPProvider(port: string) {
     return app.config.settings.pipedProviders.find((provider) => {
       return (
         provider.pipeElements &&
@@ -49,7 +63,7 @@ module.exports.runDiscovery = function (app) {
     })
   }
 
-  function findTCPProvider(host, port) {
+  function findTCPProvider(host: string, port: string) {
     return app.config.settings.pipedProviders.find((provider) => {
       return (
         provider.pipeElements &&
@@ -64,7 +78,12 @@ module.exports.runDiscovery = function (app) {
     })
   }
 
-  function findWSProvider(ip, wsType, host, port) {
+  function findWSProvider(
+    ip: string,
+    wsType: WsType,
+    host: string,
+    port: number | string
+  ) {
     return app.config.settings.pipedProviders.find((provider) => {
       return (
         provider.pipeElements &&
@@ -73,7 +92,7 @@ module.exports.runDiscovery = function (app) {
         provider.pipeElements[0].options &&
         provider.pipeElements[0].options.type === 'SignalK' &&
         provider.pipeElements[0].options.subOptions.type === wsType &&
-        provider.pipeElements[0].options.subOptions.port.toString() ===
+        provider.pipeElements[0].options.subOptions.port?.toString() ===
           port.toString() &&
         (provider.pipeElements[0].options.subOptions.host === host ||
           provider.pipeElements[0].options.subOptions.host === ip)
@@ -82,13 +101,13 @@ module.exports.runDiscovery = function (app) {
   }
 
   function discoverGoFree() {
-    const socket = dgram.createSocket('udp4')
-    const found = []
+    const socket = createSocket('udp4')
+    const found: string[] = []
     socket.on('message', function (buffer) {
       const msg = buffer.toString('utf8')
       if (msg[0] === '{') {
         try {
-          const json = JSON.parse(msg)
+          const json: GoFreeMessage = JSON.parse(msg)
           const serial = json.SerialNumber
           if (json.Services && found.indexOf(serial) === -1) {
             json.Services.forEach((service) => {
@@ -151,12 +170,11 @@ module.exports.runDiscovery = function (app) {
 
   function discoverWLN10() {
     if (!findUDPProvider('2000')) {
-      let socket = dgram.createSocket('udp4')
+      const socket = createSocket('udp4')
       socket.on('message', function (buffer) {
         const msg = buffer.toString('utf8')
         if (msg[0] === '$') {
           socket.close()
-          socket = undefined
           app.emit('discovered', {
             id: 'WLN10',
             pipeElements: [
@@ -194,21 +212,16 @@ module.exports.runDiscovery = function (app) {
     }
   }
 
-  function discoverSignalkWs(wsType) {
+  function discoverSignalkWs(wsType: WsType) {
     try {
-      mdns.excludeInterface('0.0.0.0')
-      var browser = mdns.createBrowser(mdns.tcp('signalk-' + wsType))
+      // mdns.excludeInterface('0.0.0.0')
+      const browser = new Browser(tcp('signalk-' + wsType))
 
-      browser.on('ready', function onReady() {
-        try {
-          debug('looking for SignalK ' + wsType)
-          browser.discover()
-        } catch (err) {
-          debug('discoverSignalkWs:', err)
-        }
+      browser.on('error', (err) => {
+        debug('discoverSignalkWs:', err)
       })
 
-      browser.on('update', function onUpdate(data) {
+      browser.on('serviceUp', (data: Service) => {
         try {
           if (
             !isLocalIP(data.addresses[0]) &&
@@ -229,7 +242,7 @@ module.exports.runDiscovery = function (app) {
                     subOptions: {
                       type: wsType,
                       host: data.host,
-                      port: data.port,
+                      port: data.port.toString(),
                       providerId: providerId
                     },
                     providerId: providerId
@@ -242,6 +255,8 @@ module.exports.runDiscovery = function (app) {
           debug('discoverSignalkWs:', err)
         }
       })
+
+      browser.start()
 
       setTimeout(() => {
         try {
@@ -256,13 +271,13 @@ module.exports.runDiscovery = function (app) {
     }
   }
 
-  function isLocalIP(IP) {
+  function isLocalIP(ip: string) {
     const nets = networkInterfaces()
 
-    for (const name of Object.keys(nets)) {
-      for (const net of nets[name]) {
+    for (const interfaces of Object.values(nets)) {
+      for (const net of interfaces ?? []) {
         if (net.family === 'IPv4' && !net.internal) {
-          if (net.address === IP) {
+          if (net.address === ip) {
             return true
           }
         }
@@ -279,7 +294,7 @@ if (require.main === module) {
         pipedProviders: []
       }
     },
-    emit: (event, p) => {
+    emit: (_: string, p: PipedProviderConfig) => {
       console.log(`found ${JSON.stringify(p)}`)
     }
   }

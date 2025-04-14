@@ -24,10 +24,11 @@ import _ from 'lodash'
 import path from 'path'
 import semver from 'semver'
 import { v4 as uuidv4 } from 'uuid'
-import { ServerApp, SignalKMessageHub, WithConfig } from '../app'
+import { ConfigApp } from '../app'
 import { createDebug } from '../debug'
 import DeltaEditor from '../deltaeditor'
 import { getExternalPort } from '../ports'
+import { PipedProviderConfig } from '../pipedproviders'
 const debug = createDebug('signalk-server:config')
 
 let disableWriteSettings = false
@@ -58,7 +59,7 @@ export interface Config {
   security: boolean
   settings: {
     useBaseDeltas?: boolean
-    pipedProviders: any[]
+    pipedProviders: PipedProviderConfig[]
     interfaces?: { [ifaceName: string]: boolean }
     security?: any
     ssl?: boolean
@@ -82,11 +83,6 @@ export interface Config {
     }
   }
   defaults: object
-}
-
-export interface ConfigApp extends ServerApp, WithConfig, SignalKMessageHub {
-  argv: any
-  env: any
 }
 
 export function load(app: ConfigApp) {

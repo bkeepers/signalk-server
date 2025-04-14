@@ -28,7 +28,6 @@ import unzipper from 'unzipper'
 import util from 'util'
 import { mountSwaggerUi } from './api/swagger'
 import {
-  ConfigApp,
   readDefaultsFile,
   sendBaseDeltas,
   writeBaseDeltasFile,
@@ -52,15 +51,16 @@ import { listAllSerialPorts } from './serialports'
 import { StreamBundle } from './streambundle'
 import { WithWrappedEmitter } from './events'
 import { Logging } from './logging'
+import availableInterfaces from './interfaces'
+import { ConfigApp } from './app'
+import { getAISShipTypeName } from '@signalk/signalk-schema'
+
 const readdir = util.promisify(fs.readdir)
 const debug = createDebug('signalk-server:serverroutes')
-import { getAISShipTypeName } from '@signalk/signalk-schema'
 const ncp = ncpI.ncp
 
 const defaultSecurityStrategy = './tokensecurity'
 const skPrefix = '/signalk/v1'
-
-import availableInterfaces from './interfaces'
 
 interface ScriptsApp {
   addons: ModuleInfo[]

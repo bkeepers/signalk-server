@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PropertyValues, PropertyValuesCallback } from '@signalk/server-api'
+import { PropertyValues, PropertyValuesEmitter } from '@signalk/server-api'
 import _ from 'lodash'
 import { Duplex, Writable } from 'stream'
 import { SignalKMessageHub, WithConfig } from './app'
@@ -38,22 +38,32 @@ class DevNull extends Writable {
   }
 }
 
-interface PipeElementConfig {
+export interface PipeElementConfig {
   type: string
-  options?: {
-    providerId: string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    emitPropertyValue: (name: string, value: any) => void
-    onPropertyValues: (name: string, cb: PropertyValuesCallback) => void
-    app: unknown
+  options: Partial<PropertyValuesEmitter> & {
+    providerId?: string
+    type?: string
+    app?: unknown
+    logging?: boolean
+    // TSDODO: use generics to map these to types for individual providers?
+    subOptions: {
+      type?: string
+      dataType?: string
+      filename?: string
+      host?: string
+      port?: string
+      providerId?: string
+    }
   }
   enabled?: boolean
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  optionMappings: any
+  optionMappings?: {
+    fromAppProperty: string
+    toOption: string
+  }[]
 }
 
 export interface PipedProviderConfig {
-  enabled: boolean
+  enabled?: boolean
   id: string
   pipeElements: PipeElementConfig[]
 }

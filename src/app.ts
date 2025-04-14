@@ -1,20 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Delta, FeatureInfo, ServerAPI, SKVersion } from '@signalk/server-api'
+import {
+  Delta,
+  FeatureInfo,
+  SelfIdentity,
+  ServerAPI,
+  SKVersion
+} from '@signalk/server-api'
 import { FullSignalK } from '@signalk/signalk-schema'
 import { EventEmitter } from 'node:events'
 import { Config } from './config/config'
 import DeltaCache from './deltacache'
 import { WithSecurityStrategy } from './security'
 import { IRouter } from 'express'
-import { ServerAppEvents } from './events'
+import { ServerAppEvents, WithWrappedEmitter } from './events'
 import { Logging } from './logging'
+import { PluginManager } from './interfaces/plugins'
 
 export interface ServerApp
   extends ServerAPI,
     WithSecurityStrategy,
     IRouter,
     WithConfig,
-    SignalKMessageHub {
+    SignalKMessageHub,
+    ConfigApp,
+    PluginManager,
+    WithWrappedEmitter {
   started: boolean
   interfaces: { [key: string]: any }
   intervals: NodeJS.Timeout[]
@@ -26,6 +36,11 @@ export interface ServerApp
   lastServerEvents: { [key: string]: any }
   clients: number
   logging: Logging
+}
+
+export interface ConfigApp extends WithConfig, SignalKMessageHub, SelfIdentity {
+  argv: any
+  env: any
 }
 
 export interface SignalKMessageHub extends EventEmitter<ServerAppEvents> {

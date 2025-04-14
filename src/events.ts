@@ -19,7 +19,8 @@ export interface ServerAppEvents {
         | 'VESSEL_INFO'
         | 'SERVERSTATISTICS'
         | 'PROVIDERSTATUS'
-      from?: 'signalk-server' | 'disccovery'
+        | 'DISCOVERY_CHANGED'
+      from?: 'signalk-server' | 'discovery'
       data: unknown
     }
   ]
@@ -29,6 +30,7 @@ export interface ServerAppEvents {
       data: LogMessage
     }
   ]
+  discovered: [PipedProviderConfig]
 }
 
 export function startEvents(
