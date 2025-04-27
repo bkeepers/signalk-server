@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Context, Path, SourceRef } from '@signalk/server-api'
+import { Context, Delta, Path, PathValue, SourceRef, Update } from '@signalk/server-api'
 import { createDebug } from './debug'
 const debug = createDebug('signalk-server:sourcepriorities')
 
@@ -10,11 +9,6 @@ interface SourcePriority {
 
 export interface SourcePrioritiesData {
   [path: string]: SourcePriority[]
-}
-
-interface PathValue {
-  path: string
-  value: any
 }
 
 interface TimestampedSource {
@@ -52,10 +46,10 @@ const toPrecedences = (sourcePrioritiesMap: {
   )
 
 export type ToPreferredDelta = (
-  delta: any,
+  delta: Delta,
   now: Date,
   selfContext: string
-) => any
+) => Delta
 
 export const getToPreferredDelta = (
   sourcePrioritiesData: SourcePrioritiesData,
@@ -63,7 +57,7 @@ export const getToPreferredDelta = (
 ): ToPreferredDelta => {
   if (!sourcePrioritiesData) {
     debug('No priorities data')
-    return (delta: any, _now: Date, _selfContext: string) => delta
+    return (delta: Delta, _now: Date, _selfContext: string) => delta
   }
   const precedences = toPrecedences(sourcePrioritiesData)
 
@@ -140,22 +134,21 @@ export const getToPreferredDelta = (
     return isPreferred
   }
 
-  return (delta: any, now: Date, selfContext: string) => {
+  return (delta: Delta, now: Date, selfContext: string) => {
     if (delta.context === selfContext) {
       const millis = now.getTime()
-      delta.updates &&
-        delta.updates.forEach((update: any) => {
+      delta.updates?.forEach((update: Update) => {
+        if ('values' in update) {
           update.values =
-            update.values &&
-            update.values.reduce((acc: any, pathValue: PathValue) => {
+            update.values?.reduce((acc: PathValue[], pathValue: PathValue) => {
               const latest = getLatest(
                 delta.context as Context,
                 pathValue.path as Path
               )
               const isPreferred = isPreferredValue(
-                pathValue.path as Path,
+                pathValue.path,
                 latest,
-                update.$source,
+                update.$source!, // TODO[TS]: make optional consistent
                 millis
               )
               if (isPreferred) {
@@ -170,7 +163,8 @@ export const getToPreferredDelta = (
               }
               return acc
             }, [])
-        })
+        }
+      })
     }
     return delta
   }

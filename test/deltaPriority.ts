@@ -1,4 +1,4 @@
-import { SourceRef } from '@signalk/server-api'
+import { Context, Path, SourceRef } from '@signalk/server-api'
 import {
   getToPreferredDelta,
   SourcePrioritiesData
@@ -40,13 +40,13 @@ describe('toPreferredDelta logic', () => {
         result.push(
           toPreferredDelta(
             {
-              context: 'self',
+              context: 'self' as Context,
               updates: [
                 {
-                  $source: sourceRef,
+                  $source: sourceRef as SourceRef,
                   values: [
                     {
-                      path: 'environment.wind.speedApparent',
+                      path: 'environment.wind.speedApparent' as Path,
                       value: n++
                     }
                   ]
