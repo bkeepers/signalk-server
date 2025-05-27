@@ -18,9 +18,18 @@ RUN npm config rm proxy \
 
 FROM base AS tarballs_installed
 WORKDIR /home/node/signalk
-COPY *.tgz .
 USER root
+# Install the latest npm version
+RUN npm install -g npm@latest
 
+# Copy the source code
+COPY . .
+
+RUN npm install
+RUN npm run build:all
+RUN npm pack --workspaces
+RUN npm pack
+RUN rm typedoc-signalk-theme*.tgz # This is only needed as a dev dependency
 RUN npm i -g *.tgz
 # move server-admin-ui that gets installed as sibling of signalk-server
 RUN mv /usr/lib/node_modules/@signalk/* /usr/lib/node_modules/signalk-server/node_modules/@signalk/
