@@ -34,7 +34,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -42,7 +42,7 @@ jobs:
           file: ./docker/Dockerfile
           platforms: ${{ matrix.platform }}
           push: true
-          tags: ghcr.io/signalk/signalk-server:${{ matrix.arch }}-${{ matrix.os }}-${{ github.run_id }}
+          tags: ghcr.io/${{ github.repository }}:${{ matrix.arch }}-${{ matrix.os }}-${{ github.run_id }}
           build-args: |
             REGISTRY=ghcr.io
             UBUNTU_VERSION=${{ matrix.os }}
@@ -65,14 +65,16 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            signalk/signalk-server
-            ghcr.io/signalk/signalk-server
+            ${{ github.repository }}
+            ghcr.io/${{ github.repository }}
           tags: |
             type=ref,event=branch
             type=sha
           flavor: |
             suffix=${{ matrix.suffix }}
       - name: Login to Docker Hub
+        # Don't attempt to push to DockerHub from forks
+        if: ${{ github.repository_owner == 'signalk' }}
         uses: docker/login-action@v3
         with:
           username: signalkci
@@ -81,8 +83,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Create and push multi-arch manifest to GHCR and Docker Hub
         uses: int128/docker-manifest-create-action@v2
         with:
@@ -104,4 +106,4 @@ jobs:
           packages: signalk-server
           delete-untagged: true
           delete-tags: amd-22.04-${{ github.run_id }},arm-22.04-${{ github.run_id }},amd-24.04-${{ github.run_id }},arm-24.04-${{ github.run_id }}
-          token: ${{ secrets.GHCR_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
