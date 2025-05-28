@@ -1,4 +1,7 @@
-FROM cr.signalk.io/signalk/signalk-server-base:latest
+ARG REGISTRY="cr.signalk.io"
+ARG FROM_TAG="latest"
+
+FROM ${REGISTRY}/signalk/signalk-server-base:${FROM_TAG}
 
 RUN npm config rm proxy \
   && npm config rm https-proxy \
@@ -8,7 +11,7 @@ RUN npm config rm proxy \
   && npm cache clean -f
 
 ARG TAG
-  
+
 RUN npm i -g signalk-server@$TAG \
   && ln -s /usr/lib/node_modules/signalk-server /home/node/signalk
 
