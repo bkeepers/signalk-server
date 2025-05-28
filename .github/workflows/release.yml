@@ -176,11 +176,6 @@ jobs:
       - name: Set TAG for build-args
         id: vars
         run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
-      - name: Modify Dockerfile_rel for build
-        run: |
-          sed -i \
-            "s|cr.signalk.io/signalk/signalk-server-base:latest|ghcr.io/signalk/signalk-server-base:latest-${{ matrix.os }}|g" \
-            ./docker/Dockerfile_rel
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -190,6 +185,8 @@ jobs:
           push: true
           tags: ghcr.io/signalk/signalk-server:${{ matrix.arch }}-${{ matrix.os }}-${{ github.run_id }}
           build-args: |
+            REGISTRY=ghcr.io
+            FROM_TAG=latest-${{ matrix.os }}
             TAG=${{ steps.vars.outputs.tag }}
 
   create-and-push-manifest:

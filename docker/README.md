@@ -18,7 +18,7 @@ Supported os/architectures:
 You can start a local server on port 3000 with demo data with
 
 ```
-docker run --init -it --rm --name signalk-server --publish 3000:3000 --entrypoint /home/node/signalk/bin/signalk-server cr.signalk.io/signalk/signalk-server --sample-nmea0183-data
+docker run --init -it --rm --publish 3000:3000 cr.signalk.io/signalk/signalk-server --sample-nmea0183-data
 ```
 
 For real use you need to persist /home/node/.signalk where the server's configuration is stored, with for example
